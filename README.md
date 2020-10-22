@@ -5,7 +5,7 @@
 
 **Your takeaways from this post**
 - Implement a client (lighthouse) to stake Ethereum
-- Which infrastructure to buy to stake at home: rapsberry, harddrive, internet connection
+- Which infrastructure to get to stake at home: rapsberry, harddrive, internet connection
 - A setup to obtain high security for your funds
 - Some basic monitoring and steps to fix commum issues
 
@@ -25,7 +25,7 @@ In order to stake, you will need:
 - An Ethereum 1.0 nodes to access blocks:
   - [geth](https://geth.ethereum.org/): the most popular client in GoLang
   - [parity / openEtherem](https://www.parity.io/ethereum/): great alternative in Rust 
-  - Nethermind](https://nethermind.io/): .NET version, for enterprise mainly (new)
+  - [Nethermind](https://nethermind.io/): .NET version, for enterprise mainly (new)
   - [Besu](https://www.hyperledger.org/use/besu): Java version (new)
   - Or a connection to a third party service like [infura](https://infura.io/)
 - A staking ETH2 client: 
@@ -40,20 +40,20 @@ In order to stake, you will need:
 I tried to describe below the different components and steps to enable staking.
 ![Infra](./media/eth2-staking-infra.png)
 
-- **A laptop with internet** (in green): this is a simple PC to download package from internet, build the raspberry OS, and read this documentation
-- **An ultra secured/air gapped laptop** (in red): this critical laptop needs to be trusted (don't use any PC you browsed internet in the past with) as it is generate all the keys for staking. It could be our raspberry pi with another SD that you will format again when the keys are done
+- **A laptop with internet** (in green): this is a simple PC to download packages from internet, build the raspberry OS, and read this documentation
+- **An ultra secured/air gapped laptop** (in red): this critical laptop needs to be trusted (don't use any PC you browsed internet in the past with) as it will generate all the keys for staking. It could be our raspberry pi with another SD that you will format again when the keys are done
 - **Hardware**: a simple raspberry + SSD is enough to run all the infra (at least in testnet...).
-- **Internet connection**: we can run everything from house, as long as you have a good internet connection (speed and reliability)
-- **ETH2 Staking client**: In our setup, we choose Lighthouse because Prysm represents [99%](https://eth2.ethernodes.org/network/Medalla) of the node on the medalla testnet, and we need client diversity in case of a bug, so the validation could continu on another version of the client.
+- **Internet connection**: we can run everything from our house, as long as you have a good internet connection (speed and reliability)
+- **ETH2 Staking client**: in our setup, we choose Lighthouse because Prysm represents [99%](https://eth2.ethernodes.org/network/Medalla) of the nodes on the medalla testnet, and we need client diversity in case of a bug, so the validation could continu on another version of the client.
 - **ETH1 node**: we are using Geth for the Ethereum 1 node
 
 ## Hardware
 
 | Item | Price in $ | Description |
 |------|------------|-------------|
-| [Raspberry 4 model B](https://www.raspberrypi.org/products/raspberry-pi-4-model-b/)| 90| It is powerfull and cheap to run all the infra. We opted for the 8GB version ($90). The 4GB could be enough ($60), but considering the price difference, it is good to have more RAM in case (specially when mainnet). For the OS, choose a 16GB SD card class 10
-| [External SSD Samsung T7 1TB](https://www.digitec.ch/en/s1/product/samsung-portable-t7-black-1000gb-external-ssd-13199902?tagIds=76-535)| 177| External SSD storage to store blockchains : geth and lighthouse will read/write lots of data, and the raspberry SD card is not made to handle such a load. External SSD [Samsung T7 1TB](https://www.digitec.ch/en/s1/product/samsung-portable-t7-black-1000gb-external-ssd-13199902?tagIds=76-535) is perfect to store all data. 500TB could be enough, but I did not want to be bothered if the disk get full in 1 or 2 years. Today ETH1 data take ~300GB already.
-| [Flirc raspberry case](https://www.digitec.ch/en/s1/product/sertronics-flirc-housing-electronics-supplies-casing-12241821) | | Running a staking node will use 100% of your CPU, specially in the begining where data will sync. Temperature in my default case [OKDO](https://www.digitec.ch/en/s1/product/okdo-raspberry-pi-4-model-b-case-housing-electronics-supplies-casing-11268337) was 76°C, but raspberry should run under 70°C to not loose performance. I had to change for a [Flirc case](https://www.digitec.ch/en/s1/product/sertronics-flirc-housing-electronics-supplies-casing-12241821) to get 62°C. This is perfect, as no fan noise or maintenance will be needed.
+| [Raspberry 4 model B](https://www.raspberrypi.org/products/raspberry-pi-4-model-b/)| 90| New version are still cheap and powerfull enought to run all the infra. We opted for the 8GB version ($90). The 4GB could be enough ($60), but considering the price difference, it is good to have more RAM in case (specially when mainnet). For the OS storage, choose a 16GB SD card class 10.
+| [External SSD Samsung T7 1TB](https://www.digitec.ch/en/s1/product/samsung-portable-t7-black-1000gb-external-ssd-13199902?tagIds=76-535)| 177| It will store blockchains data. Geth and Lighthouse will read/write a lot, and the raspberry SD card is not made to handle such a load. 500TB could be enough, but I did not want to be bothered if the disk get full in 1 or 2 years. Today ETH1 data take ~300GB already.
+| [Flirc raspberry case](https://www.digitec.ch/en/s1/product/sertronics-flirc-housing-electronics-supplies-casing-12241821) | 34 | Running a staking node will use 100% of your CPU, specially in the begining where data will sync. Temperature in my default case [OKDO](https://www.digitec.ch/en/s1/product/okdo-raspberry-pi-4-model-b-case-housing-electronics-supplies-casing-11268337) was 76°C, but raspberry should run under 70°C to not loose performance. I had to change for a [Flirc case](https://www.digitec.ch/en/s1/product/sertronics-flirc-housing-electronics-supplies-casing-12241821) to get 62°C. This is perfect, as no fan noise or maintenance will be needed.
 
 
 # Raspberry OS
@@ -101,14 +101,13 @@ Test a ssh connection with: `echo "ssh eth@192.168.xx.xx -p31234"`
 ## Firewall
 We will block everything, except:
 - 31234: ssh
-- 9000: lighthouse
-- 30303: geth
+- 9000: Lighthouse
+- 30303: Geth
 
 ```
 su root
 sudo apt install -y ufw
 sudo ufw status
-(reboot if you got an error here)
 sudo ufw default allow outgoing
 sudo ufw default deny incoming
 sudo ufw limit 31234/tcp
