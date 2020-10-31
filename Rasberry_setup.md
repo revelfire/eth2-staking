@@ -1,7 +1,9 @@
 ![Ethereum](./media/ethereum.jpg)
 
-# eth2-staking
+# eth2-staking on raspberry
 > Ethereum 2.0 staking with lighthouse client, a secure setup on raspberry pi 4
+
+> **warning**: this guide is for testnet only, mainnet require for now more power CPU, RAM to be to sync Beacon chain, specially when no finality can be reach...
 
 **Your takeaways from this post**
 - Implement a client (lighthouse) to stake Ethereum
@@ -9,8 +11,7 @@
 - A setup to obtain high security for your funds
 - Some basic monitoring and steps to fix commum issues
 
-
-# Introduction
+## Introduction
 
 Ethereum 1.x is migrating to [Ethereum 2.0](https://ethereum.org/en/eth2/) in few months (before 2021 hopefully), starting with [Phase 0](https://ethereum.org/en/eth2/#roadmap).
 This first upgrade will enable [proof of stake](https://ethereum.org/en/eth2/#proof-of-stake). It means you will be able to lock your ETH1 in order to validate the Ethereum 2.0 network and win rewards for that: `ROI = 4 to 22%`, depending on the number of ETH1 staked., following this distribution:
@@ -18,7 +19,7 @@ This first upgrade will enable [proof of stake](https://ethereum.org/en/eth2/#pr
 ![ROI](./media/roi.png)
 
 
-# Staking requisits
+## Staking requisites
 
 In order to stake, you will need:
 - 32 ETH (a minimum in order to start staking, a multiple of 32ETH if you want to stake more)
@@ -35,7 +36,7 @@ In order to stake, you will need:
   - [Teku](https://pegasys.tech/teku/): Java, for enterprise mainly
 
 
-# Our secure infrastructure
+## Our secure infrastructure
 
 I tried to describe below the different components and steps to enable staking.
 ![Infra](./media/eth2-staking-infra.png)
@@ -47,7 +48,7 @@ I tried to describe below the different components and steps to enable staking.
 - **ETH2 Staking client**: in our setup, we choose Lighthouse because Prysm represents [99%](https://eth2.ethernodes.org/network/Medalla) of the nodes on the medalla testnet, and we need client diversity in case of a bug, so the validation could continu on another version of the client.
 - **ETH1 node**: we are using Geth for the Ethereum 1 node
 
-## Hardware
+### Hardware
 
 | Item | Price in $ | Description |
 |------|------------|-------------|
@@ -56,14 +57,14 @@ I tried to describe below the different components and steps to enable staking.
 | [Flirc raspberry case](https://www.digitec.ch/en/s1/product/sertronics-flirc-housing-electronics-supplies-casing-12241821) | 34 | Running a staking node will use 100% of your CPU, specially in the begining where data will sync. Temperature in my default case [OKDO](https://www.digitec.ch/en/s1/product/okdo-raspberry-pi-4-model-b-case-housing-electronics-supplies-casing-11268337) was 76°C, but raspberry should run under 70°C to not loose performance. I had to change for a [Flirc case](https://www.digitec.ch/en/s1/product/sertronics-flirc-housing-electronics-supplies-casing-12241821) to get 62°C. This is perfect, as no fan noise or maintenance will be needed.
 
 
-# Raspberry OS
+## Raspberry OS
 
-## OS flashing
+### OS flashing
 We will install ubuntu 20.04 on our raspberry:
 - Download the latest image ubuntu [website](https://ubuntu.com/download/raspberry-pi)
 - Flash the raspberry SD card using (for example) [etcher](https://www.balena.io/etcher/)
 
-## OS configuration
+### OS configuration
 - Plug the SD card in the raspberry, connect all cable and switch on (default user is `ubuntu`, password is `ubuntu`). 
 - At this point you should see the local home IP and you can connect to the pi from your home laptop (on the same wifi): `ssh ubuntu:ubuntu@192.168.xx.xx`
 - Activate ssh if last step failed:
@@ -98,7 +99,7 @@ sudo systemctl restart ssh
 
 Test a ssh connection with: `echo "ssh eth@192.168.xx.xx -p31234"`
 
-## Firewall
+### Firewall
 We will block everything, except:
 - 31234: ssh
 - 9000: Lighthouse
@@ -117,12 +118,12 @@ sudo ufw status verbose
 sudo ufw enable
 ```
 
-## Home router configuration
+### Home router configuration
 You should be able to connect to your router to:
 - Always use the same local IP for raspberry: check `Reservation IP <> MAC`
 - Port forward your router [public IP](https://whatismyipaddress.com/) port 9000 and 30303 to your local raspberry IP on the same ports.
 
-## SSD external disk
+### SSD external disk
 
 - Connect to your raspberry your SSD external disk (samsumg T7) and run the following
 ```
@@ -151,9 +152,9 @@ echo '/mnt/ssd/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
 sudo cat /etc/fstab
 ```
 
-# Geth (ETH1 network)
+## Geth (ETH1 network)
 
-## Install Golang
+### Install Golang
 ```
 su root
 mkdir ~/Download
@@ -168,7 +169,7 @@ reboot
 go version
 ```
 
-## Install Geth
+### Install Geth
 
 - Download and build Geth
 ```
@@ -239,7 +240,7 @@ or
 tail -f /var/log/syslog 
 ```
 
-## Geth metrics
+### Geth metrics
 
 Few simple step to collect and visualize Geth performance in a google sheet:
 ```
@@ -253,11 +254,11 @@ Open a [google sheet](https://docs.google.com/spreadsheets/d/1lxJ5_v3ozJ7YbN1Jlg
 ).
 
 
-# Validator key to store the 32 ETH
+## Validator key to store the 32 ETH
 
 It is a good practive to open the [launchpad](https://medalla.launchpad.ethereum.org/) and read about the process.
 
-## Create the seed
+### Create the seed
 
 The most critical part is to create the validator key which will receive the funds (32+ ETH) and will validate block.
 
@@ -280,16 +281,16 @@ cabbage garden word3 word4 .... word24
 - Copy the `seed` and the `keystore password` on a piece of paper and keep it safe, this paper is CRITICAL as it contains the keys to recover the 32 ETH.
 - Copy on your USB stick the validator keys located here: `/home/myuser/Documents/eth2/validator_keys`, and transfer them to the raspberry.
 
-## Deposit 32 ETH
+### Deposit 32 ETH
 
 Follow again the [launchpad](https://medalla.launchpad.ethereum.org/), go to the section to deposit the 32 ETH. You should need to provide the file `deposit_data-1602056423.json` from your USD stick.
 
 Send 32 ETH (Goerli testnet). **Do not send mainnet ETH, please check 3 times!**
 
 
-# Lighthouse (staking client)
+## Lighthouse (staking client)
 
-## Install client
+### Install client
 - Get lighthouse (check the latest version!):
 ```
 cd ~/Download/
@@ -305,7 +306,7 @@ lighthouse --version
 lighthouse --testnet medalla account validator import --directory validator_keys
 ```
 
-## Run beacon node
+### Run beacon node
 - Try to run beacon node (with data on SSD disk, and using infura as a source for the goerli network)
 ```
 mkdir /mnt/ssd/lighthouse
@@ -347,7 +348,7 @@ or
 tail -f /var/log/syslog 
 ```
 
-# Run validator:
+## Run validator:
 
 In progress...
 
@@ -357,11 +358,11 @@ lighthouse --testnet medalla validator --auto-register
 
 
 
-# Annexes
+## Annexes
 
-## Sync nodes
+### Sync nodes
 
-### ETH1: Geth
+#### ETH1: Geth
 
 Monitor sync:
 ```
@@ -382,7 +383,7 @@ Status:
   - States: 785 813 881 ?? (no dynamic page list the max states so far)
   - 21 Oct: 637 995 425
 
-### ETH2 beacon: lighthouse
+#### ETH2 beacon: lighthouse
 
 Monitoring sync:
 ```
@@ -395,7 +396,7 @@ Status:
   - 21 Oct: 558822
 
 
-## Check temp on raspberry
+### Check temp on raspberry
 ```
 sudo apt install lm-sensors hddtemp
 watch -n 2 sensors
