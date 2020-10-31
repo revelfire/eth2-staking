@@ -1,0 +1,59 @@
+#cloud-config
+# EDIT THIS FILE AND RUNNING AGAIN TERRAFORM WILL CAUSE EBS DISK TO BE RECREATED!!! TAKE SNAPSHOT OF DATA DISK BEFORE!
+repo_update: true
+repo_upgrade: all
+
+swap:
+  filename: /swapfile
+  size: "auto"
+  maxsize: 16000000
+
+users:
+  - default
+  - name: eth
+    ssh-authorized-keys:
+      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDGR+LDVp47T50Be/uKvBm22jDI+Gfj1lqUkZmafa6YG1vfGoYADlg9BXSSMTeLrkY6xHQgbehBwyM2NyWqTZu15zHDC8QzezsB/rfi1e8NFzT/z0YgNRPL7Fvd5r8U+410uAOfs/a3nVP8NYSJDL9iJYA+HnxLNShLo+dwIuZ2nrJkdrINONrkSRbhezypZZxZEyTTQAjarU1/77f0vvm6d8S69NgflAohbVCqqVg1Lp9TiPB7tJOfL9URscvQIMRDkEtv5pccF6Us6XrX+DIyNslIH3to9FP/jUwX02uC9mX8QY3BUCFJaTesQFLhizu4SB3BEm7DUsHKQSGMpS/T gregbk1@laptopasus
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+    shell: /bin/bash
+
+packages:
+ - git
+ - unzip
+ - nmap
+
+write_files:
+  - path: /run/install_lighthouse.sh
+    permissions: '0755'
+    content: |
+      echo "INSTALL LIGHTHOUSE SCRIPT"
+      wget https://github.com/sigp/lighthouse/releases/download/v0.3.2/lighthouse-v0.3.2-x86_64-unknown-linux-gnu-portable.tar.gz
+      tar -xvf lighthouse-v0.3.2-x86_64-unknown-linux-gnu-portable.tar.gz
+      sudo cp lighthouse /usr/local/bin
+      lighthouse --version
+  - path: /etc/systemd/system/lighthouse-beacon.service
+    permissions: 0644
+    owner: root
+    content: |
+      [Unit]
+      Description=Lighthouse Beacon
+      After=network.target auditd.service
+      Wants=network.target
+      
+      [Service]
+      WorkingDirectory=/home/eth
+      ExecStart=/usr/local/bin/lighthouse --testnet medalla beacon --http --http-address 0.0.0.0
+      User=eth
+      Group=eth
+      Restart=always
+      RestartSec=5s
+
+      [Install]
+      WantedBy=multi-user.target
+      Alias=lighthouse-beacon.service
+
+runcmd:
+  - swapon -s
+  - runuser -l eth -c '/run/install_lighthouse.sh'
+  - systemctl daemon-reload
+
+final_message: "The system is finally up, after $UPTIME seconds"
