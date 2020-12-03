@@ -20,6 +20,7 @@ packages:
  - git
  - unzip
  - nmap
+ - net-tools
 
 write_files:
   - path: /etc/systemd/system/prysm-beacon.service
@@ -28,44 +29,36 @@ write_files:
     content: |
       [Unit]
       Description=Prysm Beacon
-      After=network.target auditd.service
-      Wants=network.target
+      After=network.target
       
       [Service]
       WorkingDirectory=/home/eth/prysm
       ExecStart=~/prysm/prysm.sh beacon-chain --medalla --http-web3provider=https://goerli.infura.io/v3/b552374a068f467a9a7382d4ef7dee95 --accept-terms-of-use
       User=eth
-      Group=eth
       Restart=always
-      RestartSec=5s
 
       [Install]
       WantedBy=multi-user.target
-      Alias=prysm-beacon.service
   - path: /etc/systemd/system/prysm-beacon.service
     permissions: 0644
     owner: root
     content: |
       [Unit]
       Description=Prysm Validator
-      After=network.target auditd.service
-      Wants=network.target
+      After=network.target
       
       [Service]
       WorkingDirectory=/home/eth/prysm
       ExecStart=~/prysm/prysm.sh validator --medalla --wallet-password-file ~/.eth2validators/prysm-wallet-v2/wallet.password
       User=eth
-      Group=eth
       Restart=always
-      RestartSec=5s
 
       [Install]
       WantedBy=multi-user.target
-      Alias=prysm-validator.service    
 
 runcmd:
   - swapon -s
-  - runuser -l eth -c 'mkdir ~/prysm && cd ~/prysm && curl https://raw.githubusercontent.com/prysmaticlabs/prysm/master/prysm.sh --output prysm.sh && chmod +x prysm.sh'
+  - runuser -l eth -c 'mkdir -p ~/prysm && cd ~/prysm && curl https://raw.githubusercontent.com/prysmaticlabs/prysm/master/prysm.sh --output prysm.sh && chmod +x prysm.sh'
   - systemctl daemon-reload
 
 final_message: "The system is finally up, after $UPTIME seconds"
