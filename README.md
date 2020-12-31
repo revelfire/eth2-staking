@@ -177,8 +177,9 @@ scrape_configs:
     static_configs:
       - targets: ['localhost:8082']
 EOF
-
+```
 For [Lighthouse](https://github.com/sigp/lighthouse-metrics)
+
 ```
 global:
   scrape_interval:     15s # Set the scrape interval to every 15 seconds. Default is every 1 minute.
