@@ -7,7 +7,7 @@
 > For Raspberry Pi staking (testing purpose, see this [guide](raspberry_setup.md))
 
 **Your takeaways from this post**
-- Deploy a client (Prysm or Lighthouse) to stake Ethereum in testnet (medalla)
+- Deploy a client (Prysm or Lighthouse) to stake Ethereum in testnet (pyrmont)
 - Semi automated infrastructure deployment (terraform, cloud-config, AWS, snapshot)
 - A setup to obtain high security for your funds
 - Some basic monitoring and steps to fix commum issues
@@ -43,7 +43,7 @@ In order to stake, you will need:
 ## Our infra schematics
 To be completed...
 
-## Deploy server Infra 
+## Deploy server Infra
 - You can deploy Prysm or Lighthouse or both to have two different clients ready when bug arrive. Keep both beacon synced, **but do run only 1 validator at the time !!**
 - Clone this repo and go to dir: `cd terraform/[lighthouse||prysm]` 
 - Init: `terraform init`
@@ -59,7 +59,7 @@ To be completed...
 
 ## Update to the latest version of the client
 - Stop beacon: `sudo systemctl stop [prysm|lighthouse]-beacon`
-- Pryms:
+- Prysm:
 ```
 mkdir -p ~/prysm && cd ~/prysm && curl https://raw.githubusercontent.com/prysmaticlabs/prysm/master/prysm.sh --output prysm.sh && chmod +x prysm.sh && ./prysm beaconchain --version
 ```
@@ -77,7 +77,7 @@ lighthouse --version
 ## Validator key to store the 32 ETH
 **Warning!**: before going further you need to **assure that your node is fully synced** and reached the last block listed on this [page](https://beaconscan.com/).
 
-It is a good practive to open the [launchpad](https://medalla.launchpad.ethereum.org/) and read about the process.
+It is a good practive to open the [launchpad](https://pyrmont.launchpad.ethereum.org/) and read about the process.
 
 ### Create the seed
 The most critical part is to create the validator key which will receive the funds (32+ ETH) and will validate block. Format a fresh USB stick to download the latest deposit CLI from [the official repository](https://github.com/ethereum/eth2.0-deposit-cli/releases/) (double check this link from this official documentation!!)
@@ -85,7 +85,7 @@ The most critical part is to create the validator key which will receive the fun
 **On the secure and air-gapped laptop/raspberry**: 
 - connect the USB stick to get the CLI, and run the command: 
 ```
-./deposit --num_validators 1 --chain medalla
+./deposit new-mnemonic --num_validators 1 --chain pyrmont
 ```
 - You should provide a `keystore password` and the cli should output a seed like
 ```
@@ -94,7 +94,7 @@ cabbage garden word3 word4 .... word24
 - And a directory structure like:
 ```
 /home/myuser/Documents/eth2/validator_keys/validator_keys/
-    |   deposit_data-1602056423.json                  # public key = the ETH address where you will send the 32 ETH (ok to share)
+    |   deposit_data-1602056423.json    # public key = the ETH address where you will send the 32 ETH (ok to share)
     |   keystore-m_12381_3600_0_0_0-1602056423.json   # private key (critical, do not share!!)
 
 ```
@@ -102,7 +102,7 @@ cabbage garden word3 word4 .... word24
 - Copy on your USB stick the validator keys located here: `/home/myuser/Documents/eth2/validator_keys`, and transfer them (via SCP) to your VPS server.
 
 ### Deposit 32 ETH
-Follow again the [launchpad](https://medalla.launchpad.ethereum.org/), go to the section to deposit the 32 ETH. You should need to provide the file `deposit_data-1602056423.json` from your USD stick.
+Follow again the [launchpad](https://pyrmont.launchpad.ethereum.org/), go to the section to deposit the 32 ETH. You should need to provide the file `deposit_data-1602056423.json` from your USD stick.
 
 Send 32 ETH (Goerli testnet). **Do not send mainnet ETH, please check 3 times!**
 
@@ -113,10 +113,10 @@ Please choose between, **BUT NOT BOTH !!**:
 <details>
     <summary>Click to expand</summary>
 
-Following this [doc](https://docs.prylabs.network/docs/testnet/medalla#step-5-import-your-validator-accounts-into-prysm):
+Following this [doc](https://docs.prylabs.network/docs/testnet/pyrmont#step-5-import-your-validator-accounts-into-prysm):
 - We will import the account from the USB stick.
 ```
-/home/eth/prysm/prysm.sh validator --medalla accounts import --keys-dir=~/validator_keys
+/home/eth/prysm/prysm.sh validator --pyrmont accounts import --keys-dir=~/validator_keys
 ```
 - Input your wallet password in a file to auto-unlock when you will run prysm-validator : `nano ~/.eth2validators/prysm-wallet-v2/wallet.password`
 - And secure the permission: `chmod 600  ~/.eth2validators/prysm-wallet-v2/wallet.password` 
@@ -132,9 +132,9 @@ To be completed...
 
 ## Check deposit and validator status
 
-- Check logs: `journactl -u prysm-validator -ef`
+- Check logs: `journalctl -u prysm-validator -ef`
 - You should see in logs: `Waiting for deposit to be observed by beacon node`, as it takes around 5 to 12h for your deposit to be active in the smart contract.
-- Monitoring your validator status [beaconcha.in](https://beaconcha.in/validator/863592ae2c05450139c5ede142d734136c40f321f125d9312816094067b6ec2ff42451dfee2386461c6f7a6f9f328021) or [beaconscan.com](https://beaconscan.com/validator/0x863592ae2c05450139c5ede142d734136c40f321f125d9312816094067b6ec2ff42451dfee2386461c6f7a6f9f328021) (get your pubkey from `cat validator_keys/keystore-m_12381_3600_0_0_0-1604174082.jso`)
+- Monitoring your validator status [beaconscan.com](https://beaconscan.com/pyrmont/validator/0x8fa37af82bcb78b738c5234961ddbd69bb76bf3e24ddaf45840f0c291be1214ab1c92611339717e3cd5d6862247d7a0b) (get your pubkey from `cat validator_keys/keystore-m_12381_3600_0_0_0-1604174082.jso`)
 
 ## Monitoring
 
@@ -167,12 +167,12 @@ rule_files:
 # A scrape configuration containing exactly one endpoint to scrape:
 # Here it's Prometheus itself.
 scrape_configs:
-  - job_name: 'beacon node'
-    static_configs:
-      - targets: ['localhost:8080']
   - job_name: 'validator'
     static_configs:
       - targets: ['localhost:8081']
+  - job_name: 'beacon node'
+    static_configs:
+      - targets: ['localhost:8080']
   - job_name: 'slasher'
     static_configs:
       - targets: ['localhost:8082']
@@ -211,35 +211,44 @@ Then start prometheus: `sudo systemctl start prometheus`
 
 ```
 sudo apt-get install -y adduser libfontconfig1
-wget https://dl.grafana.com/oss/release/grafana_7.3.1_amd64.deb
+wget https://dl.grafana.com/oss/release/grafana_7.3.6_amd64.deb
 
-sudo dpkg -i grafana_7.3.1_amd64.deb
+sudo dpkg -i grafana_7.3.6_amd64.deb
 sudo systemctl start grafana-server
+sudo systemctl enable grafana-server
 ```
 
-- To connect to grafana from our local laptop via ssh tunnel: `ssh -N -L 3000:localhost:3000 eth@15.237.131.85` and browse localhost:3000
+- To connect to grafana from our local laptop via ssh tunnel: `ssh -N -L 3000:localhost:3000 eth@<YOUR_NODE_IP>` and browse http://localhost:3000 (user: admin, pass: admin)
 - Add new source > prometheus > http://localhost:9090
-- import [dashboard](prym-grafana-dashboard.json)
+- import [dashboard](prysm-grafana-dashboard.json)
 - Connect telegram:
-  - Talk to @Botfather in telegram, `/newbot`
-  - Create a new group, and add your bot to it
-  - Go to Grafana > Alerting > Notification channel 
-  - Use API token you created before, Find ChatID with: `curl https://api.telegram.org/bot1300237440:AAFpmW6qy92UG8xYUjYBys1OoGhJcDXD0YY/getUpdates` (id:51321729) > Test
+  - Talk to @Botfather in telegram, `/newbot`, and give a bot name `eth-staking-test`
+  - Create a new telegram group `eth-staking-test-group`, and add your bot to it
+  - Go to Grafana > Alerting > Notification channel
+    - Name: `eth-staking-test`
+    - Type: Telegram
+    - BOT API TOKEN: `your_bot_token`
+    - Chat ID: --> Invite @getidsbot or @RawDataBot to your group and get your group id from the chat id field (e.g. id:51321729)
+  - Test & save
 
 
 ## Todo
 
 DEV
-- [x] Wait to validate [Prysm](https://beaconscan.com/medalla/validator/0xb2ded5d8f713db955d10ba4f24b325abfedd9d462983c03c3b487c47290e60135d9895f4c2d3d59c31dd21b36a525d4a)
+- [x] Wait to validate [Prysm](https://beaconscan.com/pyrmont/validator/0xb2ded5d8f713db955d10ba4f24b325abfedd9d462983c03c3b487c47290e60135d9895f4c2d3d59c31dd21b36a525d4a)
 - [x] Try validate on lighthouse (failed on raspberry)
+- [x] Enable all systemctl if failure
 - [ ] Simulate VM failure 
   - [ ] Same client (snapshot + key rebuild + timing)
   - [ ] Swith validator from Prysm to lighthouse
-- [ ] Monitor status
+- [x] Monitor status
 - [ ] ETH1 node?
 - [ ] Remote signer?
 
+TESTNET
+- [x] Monitoring with grafana + telegram
+- [x] Monitoring with [uptimerobot](https://uptimerobot.com)
+- [x] Activate daily snapshot
+
 PROD
-- [ ] Monitoring on another VM
-- [ ] Lock ssh access
-- [ ] Activate daily snapshot
+- ...

@@ -32,14 +32,13 @@ write_files:
       After=network.target
       
       [Service]
-      WorkingDirectory=/home/eth/prysm
-      ExecStart=~/prysm/prysm.sh beacon-chain --medalla --http-web3provider=https://goerli.infura.io/v3/b552374a068f467a9a7382d4ef7dee95 --accept-terms-of-use
+      ExecStart=/home/eth/prysm/prysm.sh beacon-chain --pyrmont --http-web3provider=https://goerli.prylabs.net --accept-terms-of-use
       User=eth
       Restart=always
 
       [Install]
       WantedBy=multi-user.target
-  - path: /etc/systemd/system/prysm-beacon.service
+  - path: /etc/systemd/system/prysm-validator.service
     permissions: 0644
     owner: root
     content: |
@@ -48,8 +47,7 @@ write_files:
       After=network.target
       
       [Service]
-      WorkingDirectory=/home/eth/prysm
-      ExecStart=~/prysm/prysm.sh validator --medalla --wallet-password-file ~/.eth2validators/prysm-wallet-v2/wallet.password
+      ExecStart=/home/eth/prysm/prysm.sh validator --pyrmont --wallet-password-file ~/.eth2validators/prysm-wallet-v2/wallet.password
       User=eth
       Restart=always
 
